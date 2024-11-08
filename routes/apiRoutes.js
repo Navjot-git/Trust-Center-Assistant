@@ -1,14 +1,51 @@
 const express = require('express');
 const router = express.Router();
+const { createIndex, upsertVectors, queryVectors } = require('../pineconeClient'); // Adjust path if needed
+
+// Route to create an index
+router.post('/create-index', async (req, res) => {
+  const { indexName, dimension } = req.body;
+  try {
+    await createIndex(indexName, dimension);
+    res.status(200).send(`Index "${indexName}" creation initiated`);
+  } catch (error) {
+    console.error('Error creating index:', error);
+    res.status(500).send('Failed to create index');
+  }
+});
+
+// Route to upsert vectors
+router.post('/upsert-vectors', async (req, res) => {
+  const { indexName, vectors } = req.body;
+  try {
+    if (!indexName || !Array.isArray(vectors)) {
+      return res.status(400).json({ error: 'Invalid payload structure' });
+    }
+    await upsertVectors(indexName, vectors);
+    res.status(200).json({ message: 'Vectors upserted successfully' });
+  } catch (error) {
+    console.error('Error upserting vectors:', error);
+    res.status(500).send('Failed to upsert vectors');
+  }
+});
+
+// Route to query vectors
+router.post('/query-vectors', async (req, res) => {
+  const { indexName, queryVector, topK } = req.body;
+  try {
+    const results = await queryVectors(indexName, queryVector, topK);
+    res.status(200).json({ matches: results });
+  } catch (error) {
+    console.error('Error querying vectors:', error);
+    res.status(500).send('Failed to query vectors');
+  }
+});
+
 
 // Route to handle user queries
 router.post('/query', (req, res) => {
     try{
         const userQuery= req.body.query;
-        console.log('Query:', req.body.query);
-        console.log('Query:', JSON.stringify(req.body.query));
-
-        console.log('Type of session data:', typeof req.body.query);
 
         if (!userQuery) {
           return res.status(400).json({ message: 'Query is required' });
@@ -19,7 +56,6 @@ router.post('/query', (req, res) => {
           req.session.queries = [];
         }
         req.session.queries.push(userQuery);
-        console.log('Type of session data:', typeof JSON.stringify(req.session.queries));
 
         // Placeholder logic for processing the query
         console.log(`Session Queries: ${req.session.queries}`);

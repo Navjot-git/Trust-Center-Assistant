@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const pinecone = require('./pineconeClient');
 const session = require('express-session');
 const RedisStore = require('connect-redis')(session);
 const redis = require('redis');
