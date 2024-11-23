@@ -1,12 +1,20 @@
 require('dotenv').config();
 const express = require('express');
-const pinecone = require('./pineconeClient');
+//const pinecone = require('./pineconeClient');
 const session = require('express-session');
 const RedisStore = require('connect-redis')(session);
 const redis = require('redis');
+const cors = require('cors'); 
+
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5001;
+
+
+// Enable CORS for all routes
+app.use(cors({
+  origin: 'http://localhost:3000' // Replace with your frontend URL
+}));
 
 // Create Redis client
 const redisClient = redis.createClient({
@@ -51,7 +59,7 @@ app.use((req, res, next) => {
 // })
 
 // Import and use API routes
-const apiRoutes = require('./routes/apiRoutes');
+const apiRoutes = require('./routes/apiRoutes.mjs').default;
 app.use('/api', apiRoutes);
 
 // Start the server
